@@ -1,5 +1,3 @@
 # microservice specific routes
 
 POST        /calculation            controllers.CalculationController.save()
-
-GET        /hello-world             controllers.MicroserviceHelloWorldController.hello
