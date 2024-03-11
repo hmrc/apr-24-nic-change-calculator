@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package controllers
+package models
 
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.http.Status
-import play.api.test.Helpers._
-import play.api.test.{FakeRequest, Helpers}
+import play.api.libs.json.{Json, OFormat}
 
-class MicroserviceHelloWorldControllerSpec extends AnyWordSpec with Matchers {
+final case class CalculationRequest(
+                                     annualSalary: BigDecimal,
+                                     dec23EstimatedNic: BigDecimal,
+                                     mar24EstimatedNic: BigDecimal,
+                                     apr24EstimatedNic: BigDecimal
+                                   )
 
-  private val fakeRequest = FakeRequest("GET", "/")
-  private val controller = new MicroserviceHelloWorldController(Helpers.stubControllerComponents())
+object CalculationRequest {
 
-  "GET /" should {
-    "return 200" in {
-      val result = controller.hello()(fakeRequest)
-      status(result) shouldBe Status.OK
-    }
-  }
+  implicit lazy val format: OFormat[CalculationRequest] = Json.format
 }
