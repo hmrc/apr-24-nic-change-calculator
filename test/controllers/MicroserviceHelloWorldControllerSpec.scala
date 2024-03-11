@@ -14,14 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.apr24nicchangecalculator.config
+package controllers
 
-import com.google.inject.AbstractModule
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.http.Status
+import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Helpers}
 
-class Module extends AbstractModule {
+class MicroserviceHelloWorldControllerSpec extends AnyWordSpec with Matchers {
 
-  override def configure(): Unit = {
+  private val fakeRequest = FakeRequest("GET", "/")
+  private val controller = new MicroserviceHelloWorldController(Helpers.stubControllerComponents())
 
-    bind(classOf[AppConfig]).asEagerSingleton()
+  "GET /" should {
+    "return 200" in {
+      val result = controller.hello()(fakeRequest)
+      status(result) shouldBe Status.OK
+    }
   }
 }
