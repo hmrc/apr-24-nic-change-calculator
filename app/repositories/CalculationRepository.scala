@@ -24,6 +24,7 @@ import org.mongodb.scala.model._
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
+import uk.gov.hmrc.play.http.logging.Mdc
 
 import java.time.Instant
 import javax.inject.{Inject, Singleton}
@@ -58,31 +59,41 @@ class CalculationRepository @Inject()(mongoComponent: MongoComponent)
   override lazy val requiresTtlIndex: Boolean = false
 
   def save(calculation: Calculation): Future[Done] =
-    collection.insertOne(calculation)
-      .toFuture()
-      .map(_ => Done)
+    Mdc.preservingMdc {
+      collection.insertOne(calculation)
+        .toFuture()
+        .map(_ => Done)
+    }
 
   def lastCalculation: Future[Option[Calculation]] =
-    collection.find()
-      .sort(Sorts.descending("timestamp"))
-      .limit(1)
-      .headOption()
+    Mdc.preservingMdc {
+      collection.find()
+        .sort(Sorts.descending("timestamp"))
+        .limit(1)
+        .headOption()
+    }
 
   def numberOfCalculations(from: Option[Instant] = None, to: Option[Instant] = None): Future[Long] =
-    collection.countDocuments(timestampFilter(from, to)).head()
+    Mdc.preservingMdc {
+      collection.countDocuments(timestampFilter(from, to)).head()
+    }
 
   def numberOfUniqueSessions(from: Option[Instant] = None, to: Option[Instant] = None): Future[Long] =
-    collection.aggregate[DistinctSessionIds](Seq(
-      `match`(timestampFilter(from, to)),
-      group("$sessionId"),
-      count("distinctSessionIds"))
-    ).headOption().map(_.map(_.distinctSessionIds).getOrElse(0))
+    Mdc.preservingMdc {
+      collection.aggregate[DistinctSessionIds](Seq(
+        `match`(timestampFilter(from, to)),
+        group("$sessionId"),
+        count("distinctSessionIds"))
+      ).headOption().map(_.map(_.distinctSessionIds).getOrElse(0))
+    }
 
   def averageSalary(from: Option[Instant] = None, to: Option[Instant] = None): Future[Long] =
-    collection.aggregate[AverageSalary](Seq(
-      `match`(timestampFilter(from, to)),
-      group(null, avg("averageSalary", "$annualSalary"))
-    )).headOption().map(_.map(_.averageSalary.toLong).getOrElse(0))
+    Mdc.preservingMdc {
+      collection.aggregate[AverageSalary](Seq(
+        `match`(timestampFilter(from, to)),
+        group(null, avg("averageSalary", "$annualSalary"))
+      )).headOption().map(_.map(_.averageSalary.toLong).getOrElse(0))
+    }
 
   private def timestampFilter(from: Option[Instant] = None, to: Option[Instant] = None): Bson = {
     val fromFilter = from.map(Filters.gte("timestamp", _))

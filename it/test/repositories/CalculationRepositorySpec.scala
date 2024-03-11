@@ -18,17 +18,20 @@ package repositories
 
 import models.Calculation
 import org.scalacheck.{Arbitrary, Gen, Shrink}
+import org.scalactic.source.Position
 import org.scalatest.OptionValues
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.must.Matchers
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import org.slf4j.MDC
 import uk.gov.hmrc.crypto.Scrambled
 import uk.gov.hmrc.mongo.test.{CleanMongoCollectionSupport, DefaultPlayMongoRepositorySupport}
 
 import java.time._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class CalculationRepositorySpec
   extends AnyFreeSpec
@@ -38,7 +41,8 @@ class CalculationRepositorySpec
     with ScalaFutures
     with IntegrationPatience
     with OptionValues
-    with ScalaCheckPropertyChecks {
+    with ScalaCheckPropertyChecks
+    with GuiceOneAppPerSuite {
 
   private implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
 
@@ -67,8 +71,6 @@ class CalculationRepositorySpec
 
   ".save" - {
 
-    "must save a calculation" in {
-
       val timestamp = Instant.ofEpochSecond(1)
 
       val calculation = Calculation(
@@ -80,12 +82,16 @@ class CalculationRepositorySpec
         timestamp = timestamp
       )
 
+    "must save a calculation" in {
+
       repository.save(calculation).futureValue
 
       val calculations = repository.collection.find().toFuture().futureValue
       calculations.size mustEqual 1
       calculations.head mustEqual calculation
     }
+
+    mustPreserveMdc(repository.save(calculation))
   }
 
   ".lastCalculation" - {
@@ -114,6 +120,8 @@ class CalculationRepositorySpec
 
       repository.lastCalculation.futureValue.value mustEqual calc2
     }
+
+    mustPreserveMdc(repository.lastCalculation)
   }
 
   ".numberOfCalculations" - {
@@ -205,6 +213,8 @@ class CalculationRepositorySpec
         repository.numberOfCalculations(from = Some(from), to = Some(to)).futureValue mustEqual calculations.length
       }
     }
+
+    mustPreserveMdc(repository.numberOfCalculations())
   }
 
   ".numberOfUniqueSessions" - {
@@ -302,6 +312,8 @@ class CalculationRepositorySpec
         repository.numberOfUniqueSessions(from = Some(from), to = Some(to)).futureValue mustEqual calculations.length
       }
     }
+
+    mustPreserveMdc(repository.numberOfUniqueSessions())
   }
 
   ".averageSalary" - {
@@ -397,6 +409,8 @@ class CalculationRepositorySpec
         repository.averageSalary(from = Some(from), to = Some(to)).futureValue mustEqual expectedAverageSalary
       }
     }
+
+    mustPreserveMdc(repository.averageSalary())
   }
 
   implicit class RichInstant(instant: Instant) {
@@ -407,4 +421,16 @@ class CalculationRepositorySpec
     def -(period: Period): Instant =
       LocalDateTime.ofInstant(instant, ZoneOffset.UTC).minus(period).toInstant(ZoneOffset.UTC)
   }
+
+  private def mustPreserveMdc[A](f: => Future[A])(implicit pos: Position): Unit =
+    "must preserve MDC" in {
+
+      val ec = app.injector.instanceOf[ExecutionContext]
+
+      MDC.put("test", "foo")
+
+      f.map { _ =>
+        MDC.get("test") mustEqual "foo"
+      }(ec).futureValue
+    }
 }
