@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package config
+package models
 
-import com.google.inject.AbstractModule
+import play.api.libs.json.{Json, OFormat}
 
-import java.time.Clock
+final case class CalculationRequest(
+                                     annualSalary: BigDecimal,
+                                     dec23EstimatedNic: BigDecimal,
+                                     mar24EstimatedNic: BigDecimal,
+                                     apr24EstimatedNic: BigDecimal
+                                   )
 
-class Module extends AbstractModule {
+object CalculationRequest {
 
-  override def configure(): Unit = {
-
-    bind(classOf[AppConfig]).asEagerSingleton()
-    bind(classOf[Clock]).toInstance(Clock.systemUTC())
-  }
+  implicit lazy val format: OFormat[CalculationRequest] = Json.format
 }
