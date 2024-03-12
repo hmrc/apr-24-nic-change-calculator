@@ -16,10 +16,10 @@
 
 package services
 
-import models.{Calculation, CalculationRequest, Done}
-import org.mockito.ArgumentMatchers.any
+import models.{Calculation, CalculationRequest, CalculationSummaryData, Done}
+import org.mockito.ArgumentMatchers.{any, eq => eqTo}
 import org.mockito.{ArgumentCaptor, Mockito}
-import org.mockito.Mockito.{times, verify, when}
+import org.mockito.Mockito.{never, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpec
@@ -27,9 +27,10 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.Helpers.running
 import repositories.CalculationRepository
 
-import java.time.{Clock, Instant, LocalDate, ZoneId}
+import java.time.{Clock, Instant, LocalDate, ZoneId, ZoneOffset}
 import scala.concurrent.Future
 
 class CalculationServiceSpec
@@ -83,6 +84,71 @@ class CalculationServiceSpec
       calculation.mar24EstimatedNic mustEqual mar24Nic
       calculation.apr24EstimatedNic mustEqual apr24Nic
       calculation.timestamp mustEqual fixedInstant
+    }
+  }
+
+  ".summary" - {
+
+    val application =
+      new GuiceApplicationBuilder()
+        .overrides(
+          bind[CalculationRepository].toInstance(mockRepository),
+        )
+        .build()
+
+    val service = application.injector.instanceOf[CalculationService]
+
+    val from = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+    val to = LocalDate.of(2025, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+    val summaryData = CalculationSummaryData(
+      from = Some(from),
+      to = Some(to),
+      numberOfCalculations = 1000,
+      numberOfUniqueSessions = 500,
+      averageSalary = 15000
+    )
+
+    "must return a summary" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.averageSalary(any(), any())).thenReturn(Future.successful(15000))
+
+      service.summary(Some(from), Some(to)).futureValue mustEqual summaryData
+
+      verify(mockRepository).numberOfCalculations(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).numberOfUniqueSessions(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the number of calculations" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).numberOfUniqueSessions(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the number of unique sessions" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the average salary" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.averageSalary(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
     }
   }
 }

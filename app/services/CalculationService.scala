@@ -16,7 +16,7 @@
 
 package services
 
-import models.{Calculation, CalculationRequest, Done}
+import models.{Calculation, CalculationRequest, CalculationSummaryData, Done}
 import play.api.Configuration
 import repositories.CalculationRepository
 import uk.gov.hmrc.crypto.{OnewayCryptoFactory, PlainText}
@@ -48,4 +48,17 @@ class CalculationService @Inject()(
 
     repository.save(calculation)
   }
+
+  def summary(from: Option[Instant] = None, to: Option[Instant] = None): Future[CalculationSummaryData] =
+    for {
+      numberOfCalculations <- repository.numberOfCalculations(from, to)
+      numberOfUniqueSessions <- repository.numberOfUniqueSessions(from, to)
+      averageSalary <- repository.averageSalary(from, to)
+    } yield CalculationSummaryData(
+      from = from,
+      to = to,
+      numberOfCalculations = numberOfCalculations,
+      numberOfUniqueSessions = numberOfUniqueSessions,
+      averageSalary = averageSalary
+    )
 }
