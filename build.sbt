@@ -18,6 +18,7 @@ lazy val microservice = Project("apr-24-nic-change-calculator", file("."))
   )
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
+  .settings(PlayKeys.playDefaultPort := 11404)
 
 lazy val it = project
   .enablePlugins(PlayScala)
