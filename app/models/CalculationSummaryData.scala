@@ -25,6 +25,8 @@ final case class CalculationSummaryData(
                                          to: Option[Instant],
                                          numberOfCalculations: Long,
                                          numberOfUniqueSessions: Long,
+                                         numberOfCalculationsWithNoSavings: Long,
+                                         numberOfCalculationsWithMinimalSavings: Long,
                                          averageSalary: BigDecimal
                                        )
 
