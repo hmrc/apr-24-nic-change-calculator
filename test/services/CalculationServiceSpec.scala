@@ -106,6 +106,8 @@ class CalculationServiceSpec
       to = Some(to),
       numberOfCalculations = 1000,
       numberOfUniqueSessions = 500,
+      numberOfCalculationsWithNoSavings = 300,
+      numberOfCalculationsWithMinimalSavings = 100,
       averageSalary = 15000
     )
 
@@ -113,12 +115,16 @@ class CalculationServiceSpec
 
       when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
       when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
       when(mockRepository.averageSalary(any(), any())).thenReturn(Future.successful(15000))
 
       service.summary(Some(from), Some(to)).futureValue mustEqual summaryData
 
       verify(mockRepository).numberOfCalculations(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository).numberOfUniqueSessions(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).numberOfCalculationsWithNoSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -129,6 +135,8 @@ class CalculationServiceSpec
       service.summary(Some(from), Some(to)).failed.futureValue
 
       verify(mockRepository, never()).numberOfUniqueSessions(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).numberOfCalculationsWithNoSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -139,6 +147,32 @@ class CalculationServiceSpec
 
       service.summary(Some(from), Some(to)).failed.futureValue
 
+      verify(mockRepository, never()).numberOfCalculationsWithNoSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the number of calculations with no savings" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the number of calculations with minimal savings" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
       verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -146,6 +180,8 @@ class CalculationServiceSpec
 
       when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
       when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
       when(mockRepository.averageSalary(any(), any())).thenReturn(Future.failed(new RuntimeException()))
 
       service.summary(Some(from), Some(to)).failed.futureValue

@@ -53,12 +53,16 @@ class CalculationService @Inject()(
     for {
       numberOfCalculations <- repository.numberOfCalculations(from, to)
       numberOfUniqueSessions <- repository.numberOfUniqueSessions(from, to)
+      numberOfCalculationsWithNoSavings <- repository.numberOfCalculationsWithNoSavings(from, to)
+      numberOfCalculationsWithMinimalSavings <- repository.numberOfCalculationsWithMinimalSavings(from, to)
       averageSalary <- repository.averageSalary(from, to)
     } yield CalculationSummaryData(
       from = from,
       to = to,
       numberOfCalculations = numberOfCalculations,
       numberOfUniqueSessions = numberOfUniqueSessions,
+      numberOfCalculationsWithNoSavings = numberOfCalculationsWithNoSavings,
+      numberOfCalculationsWithMinimalSavings = numberOfCalculationsWithMinimalSavings,
       averageSalary = averageSalary
     )
 }

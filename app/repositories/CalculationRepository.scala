@@ -95,6 +95,27 @@ class CalculationRepository @Inject()(mongoComponent: MongoComponent)
       )).headOption().map(_.map(_.averageSalary.toLong).getOrElse(0))
     }
 
+  def numberOfCalculationsWithNoSavings(from: Option[Instant] = None, to: Option[Instant] = None): Future[Long] =
+    Mdc.preservingMdc {
+      collection.countDocuments(
+        Filters.and(
+          timestampFilter(from, to),
+          Filters.lt("annualSalary", 12572)
+        )
+      ).head()
+    }
+
+  def numberOfCalculationsWithMinimalSavings(from: Option[Instant] = None, to: Option[Instant] = None): Future[Long] =
+    Mdc.preservingMdc {
+      collection.countDocuments(
+        Filters.and(
+          timestampFilter(from, to),
+          Filters.gte("annualSalary", 12572),
+          Filters.lte("annualSalary", 12721)
+        )
+      ).head()
+    }
+
   private def timestampFilter(from: Option[Instant] = None, to: Option[Instant] = None): Bson = {
     val fromFilter = from.map(Filters.gte("timestamp", _))
     val toFilter = to.map(Filters.lt("timestamp", _))
