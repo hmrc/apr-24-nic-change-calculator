@@ -116,6 +116,32 @@ class CalculationRepository @Inject()(mongoComponent: MongoComponent)
       ).head()
     }
 
+  def totalSavingsDec23Apr24(from: Option[Instant] = None, to: Option[Instant] = None): Future[BigDecimal] =
+    collection.aggregate[TotalSavings](Seq(
+      `match`(timestampFilter(from, to)),
+      group(null, sum("totalSavings", "$dec23Apr24AnnualSaving"))
+    )).headOption().map(_.map(_.totalSavings).getOrElse(0))
+
+  def totalSavingsAveragedBySessionDec23Apr24(from: Option[Instant] = None, to: Option[Instant] = None): Future[BigDecimal] =
+    collection.aggregate[TotalSavings](Seq(
+      `match`(timestampFilter(from, to)),
+      group("$sessionId", avg("averageSavings", "$dec23Apr24AnnualSaving")),
+      group(null, sum("totalSavings", "$averageSavings"))
+    )).headOption().map(_.map(_.totalSavings).getOrElse(0))
+
+  def totalSavingsMar24Apr24(from: Option[Instant] = None, to: Option[Instant] = None): Future[BigDecimal] =
+    collection.aggregate[TotalSavings](Seq(
+      `match`(timestampFilter(from, to)),
+      group(null, sum("totalSavings", "$mar24Apr24AnnualSaving"))
+    )).headOption().map(_.map(_.totalSavings).getOrElse(0))
+
+  def totalSavingsAveragedBySessionMar24Apr24(from: Option[Instant] = None, to: Option[Instant] = None): Future[BigDecimal] =
+    collection.aggregate[TotalSavings](Seq(
+      `match`(timestampFilter(from, to)),
+      group("$sessionId", avg("averageSavings", "$mar24Apr24AnnualSaving")),
+      group(null, sum("totalSavings", "$averageSavings"))
+    )).headOption().map(_.map(_.totalSavings).getOrElse(0))
+
   private def timestampFilter(from: Option[Instant] = None, to: Option[Instant] = None): Bson = {
     val fromFilter = from.map(Filters.gte("timestamp", _))
     val toFilter = to.map(Filters.lt("timestamp", _))

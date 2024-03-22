@@ -17,6 +17,7 @@
 package repositories
 
 import models.Calculation
+import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.{Arbitrary, Gen, Shrink}
 import org.scalactic.source.Position
 import org.scalatest.OptionValues
@@ -614,6 +615,324 @@ class CalculationRepositorySpec
     }
 
     mustPreserveMdc(repository.numberOfCalculationsWithMinimalSavings())
+  }
+
+  ".totalSavingsDec23Apr24" - {
+
+    "must return the total amount of savings from all calculations" in {
+
+      val calculations: Gen[List[Calculation]] = for {
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        calculations <- Gen.listOfN(numberOfCalculations, arbitraryCalculation.arbitrary)
+      } yield calculations
+
+      forAll(calculations) { calculations =>
+        prepareDatabase()
+        repository.totalSavingsDec23Apr24().futureValue mustEqual 0
+        Future.traverse(calculations)(repository.save).futureValue
+        repository.totalSavingsDec23Apr24().futureValue mustEqual calculations.map(_.dec23Apr24AnnualSaving).sum
+      }
+    }
+
+    "must ignore calculations from before `from`" in {
+
+      val from = datesBetween(
+        LocalDate.of(2023, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+        LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      )
+
+      val calculations: Gen[(Instant, List[Calculation], List[Calculation])] = for {
+        from <- from
+        before = from - Period.ofMonths(6)
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        ignoredCalculations <- Gen.listOf(randomCalculation(from = Some(before), to = Some(from)))
+        calculations <- Gen.listOfN(numberOfCalculations, randomCalculation(from = Some(from)))
+      } yield (from, ignoredCalculations, calculations)
+
+      forAll(calculations) { case (from, ignoredCalculations, calculations) =>
+        prepareDatabase()
+        repository.totalSavingsDec23Apr24(from = Some(from)).futureValue mustEqual 0
+        Future.traverse(ignoredCalculations ++ calculations)(repository.save).futureValue
+        repository.totalSavingsDec23Apr24(from = Some(from)).futureValue mustEqual calculations.map(_.dec23Apr24AnnualSaving).sum
+      }
+    }
+
+    "must ignore calculations from after `to`" in {
+
+      val from = datesBetween(
+        LocalDate.of(2023, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+        LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      )
+
+      val calculations: Gen[(Instant, List[Calculation], List[Calculation])] = for {
+        from <- from
+        to = from + Period.ofMonths(6)
+        after = to + Period.ofMonths(6)
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        ignoredCalculations <- Gen.listOf(randomCalculation(from = Some(to), to = Some(after)))
+        calculations <- Gen.listOfN(numberOfCalculations, randomCalculation(from = Some(from)))
+      } yield (to, ignoredCalculations, calculations)
+
+      forAll(calculations) { case (to, ignoredCalculations, calculations) =>
+        prepareDatabase()
+        repository.totalSavingsDec23Apr24(to = Some(to)).futureValue mustEqual 0
+        Future.traverse(ignoredCalculations ++ calculations)(repository.save).futureValue
+        repository.totalSavingsDec23Apr24(to = Some(to)).futureValue mustEqual calculations.map(_.dec23Apr24AnnualSaving).sum
+      }
+    }
+
+    "must only include calculations between `from` and `to`" in {
+
+      val from = datesBetween(
+        LocalDate.of(2023, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+        LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      )
+
+      val calculations: Gen[(Instant, Instant, List[Calculation], List[Calculation])] = for {
+        from <- from
+        before = from - Period.ofMonths(6)
+        to = from + Period.ofMonths(6)
+        after = to + Period.ofMonths(6)
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        beforeCalculations <- Gen.listOf(randomCalculation(from = Some(before), to = Some(from)))
+        afterCalculations <- Gen.listOf(randomCalculation(from = Some(to), to = Some(after)))
+        calculations <- Gen.listOfN(numberOfCalculations, randomCalculation(from = Some(from)))
+      } yield (from, to, beforeCalculations ++ afterCalculations, calculations)
+
+      forAll(calculations) { case (from, to, ignoredCalculations, calculations) =>
+        prepareDatabase()
+        repository.totalSavingsDec23Apr24(from = Some(from), to = Some(to)).futureValue mustEqual 0
+        Future.traverse(ignoredCalculations ++ calculations)(repository.save).futureValue
+        repository.totalSavingsDec23Apr24(from = Some(from), to = Some(to)).futureValue mustEqual calculations.map(_.dec23Apr24AnnualSaving).sum
+      }
+    }
+  }
+
+  ".totalSavingsMar24Apr24" - {
+
+    "must return the total amount of savings from all calculations" in {
+
+      val calculations: Gen[List[Calculation]] = for {
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        calculations <- Gen.listOfN(numberOfCalculations, arbitraryCalculation.arbitrary)
+      } yield calculations
+
+      forAll(calculations) { calculations =>
+        prepareDatabase()
+        repository.totalSavingsMar24Apr24().futureValue mustEqual 0
+        Future.traverse(calculations)(repository.save).futureValue
+        repository.totalSavingsMar24Apr24().futureValue mustEqual calculations.map(_.mar24Apr24AnnualSaving).sum
+      }
+    }
+
+    "must ignore calculations from before `from`" in {
+
+      val from = datesBetween(
+        LocalDate.of(2023, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+        LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      )
+
+      val calculations: Gen[(Instant, List[Calculation], List[Calculation])] = for {
+        from <- from
+        before = from - Period.ofMonths(6)
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        ignoredCalculations <- Gen.listOf(randomCalculation(from = Some(before), to = Some(from)))
+        calculations <- Gen.listOfN(numberOfCalculations, randomCalculation(from = Some(from)))
+      } yield (from, ignoredCalculations, calculations)
+
+      forAll(calculations) { case (from, ignoredCalculations, calculations) =>
+        prepareDatabase()
+        repository.totalSavingsMar24Apr24(from = Some(from)).futureValue mustEqual 0
+        Future.traverse(ignoredCalculations ++ calculations)(repository.save).futureValue
+        repository.totalSavingsMar24Apr24(from = Some(from)).futureValue mustEqual calculations.map(_.mar24Apr24AnnualSaving).sum
+      }
+    }
+
+    "must ignore calculations from after `to`" in {
+
+      val from = datesBetween(
+        LocalDate.of(2023, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+        LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      )
+
+      val calculations: Gen[(Instant, List[Calculation], List[Calculation])] = for {
+        from <- from
+        to = from + Period.ofMonths(6)
+        after = to + Period.ofMonths(6)
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        ignoredCalculations <- Gen.listOf(randomCalculation(from = Some(to), to = Some(after)))
+        calculations <- Gen.listOfN(numberOfCalculations, randomCalculation(from = Some(from)))
+      } yield (to, ignoredCalculations, calculations)
+
+      forAll(calculations) { case (to, ignoredCalculations, calculations) =>
+        prepareDatabase()
+        repository.totalSavingsMar24Apr24(to = Some(to)).futureValue mustEqual 0
+        Future.traverse(ignoredCalculations ++ calculations)(repository.save).futureValue
+        repository.totalSavingsMar24Apr24(to = Some(to)).futureValue mustEqual calculations.map(_.mar24Apr24AnnualSaving).sum
+      }
+    }
+
+    "must only include calculations between `from` and `to`" in {
+
+      val from = datesBetween(
+        LocalDate.of(2023, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC),
+        LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      )
+
+      val calculations: Gen[(Instant, Instant, List[Calculation], List[Calculation])] = for {
+        from <- from
+        before = from - Period.ofMonths(6)
+        to = from + Period.ofMonths(6)
+        after = to + Period.ofMonths(6)
+        numberOfCalculations <- Gen.chooseNum(0, 100)
+        beforeCalculations <- Gen.listOf(randomCalculation(from = Some(before), to = Some(from)))
+        afterCalculations <- Gen.listOf(randomCalculation(from = Some(to), to = Some(after)))
+        calculations <- Gen.listOfN(numberOfCalculations, randomCalculation(from = Some(from)))
+      } yield (from, to, beforeCalculations ++ afterCalculations, calculations)
+
+      forAll(calculations) { case (from, to, ignoredCalculations, calculations) =>
+        prepareDatabase()
+        repository.totalSavingsMar24Apr24(from = Some(from), to = Some(to)).futureValue mustEqual 0
+        Future.traverse(ignoredCalculations ++ calculations)(repository.save).futureValue
+        repository.totalSavingsMar24Apr24(from = Some(from), to = Some(to)).futureValue mustEqual calculations.map(_.mar24Apr24AnnualSaving).sum
+      }
+    }
+  }
+
+  ".totalSavingsAveragedBySessionDec23Apr24" - {
+
+    "must return the total amount of savings where savings are grouped and averaged on sessionId" in {
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), dec23Apr24AnnualSaving = 100)
+      val a2 = a1.copy(dec23Apr24AnnualSaving = 201)
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), dec23Apr24AnnualSaving = 1000)
+      val b2 = b1.copy(dec23Apr24AnnualSaving = 2000)
+
+      repository.totalSavingsAveragedBySessionDec23Apr24().futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, b1, b2))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionDec23Apr24().futureValue mustEqual 1650.5
+    }
+
+    "must ignore calculations from before `from`" in {
+
+      val from = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), dec23Apr24AnnualSaving = 100, timestamp = from + Period.ofDays(1))
+      val a2 = a1.copy(dec23Apr24AnnualSaving = 201)
+      val a3 = a1.copy(timestamp = from - Period.ofDays(1))
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), dec23Apr24AnnualSaving = 1000, timestamp = from + Period.ofDays(1))
+      val b2 = b1.copy(dec23Apr24AnnualSaving = 2000)
+      val b3 = b1.copy(timestamp = from - Period.ofDays(1))
+
+      repository.totalSavingsAveragedBySessionDec23Apr24(from = Some(from)).futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, a3, b1, b2, b3))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionDec23Apr24(from = Some(from)).futureValue mustEqual 1650.5
+    }
+
+    "must ignore calculations from after `to`" in {
+
+      val to = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), dec23Apr24AnnualSaving = 100, timestamp = to - Period.ofDays(1))
+      val a2 = a1.copy(dec23Apr24AnnualSaving = 201)
+      val a3 = a1.copy(timestamp = to + Period.ofDays(1))
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), dec23Apr24AnnualSaving = 1000, timestamp = to - Period.ofDays(1))
+      val b2 = b1.copy(dec23Apr24AnnualSaving = 2000)
+      val b3 = b1.copy(timestamp = to + Period.ofDays(1))
+
+      repository.totalSavingsAveragedBySessionDec23Apr24(to = Some(to)).futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, a3, b1, b2, b3))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionDec23Apr24(to = Some(to)).futureValue mustEqual 1650.5
+    }
+
+    "must only include calculations between `from` and `to`" in {
+
+      val from = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      val to = from + Period.ofMonths(6)
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), dec23Apr24AnnualSaving = 100, timestamp = from + Period.ofDays(1))
+      val a2 = a1.copy(dec23Apr24AnnualSaving = 201)
+      val a3 = a1.copy(timestamp = from - Period.ofDays(1))
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), dec23Apr24AnnualSaving = 1000, timestamp = to - Period.ofDays(1))
+      val b2 = b1.copy(dec23Apr24AnnualSaving = 2000)
+      val b3 = b1.copy(timestamp = to + Period.ofDays(1))
+
+      repository.totalSavingsAveragedBySessionDec23Apr24(from = Some(from), to = Some(to)).futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, a3, b1, b2, b3))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionDec23Apr24(from = Some(from), to = Some(to)).futureValue mustEqual 1650.5
+    }
+  }
+
+  ".totalSavingsAveragedBySessionMar24Apr24" - {
+
+    "must return the total amount of savings where savings are grouped and averaged on sessionId" in {
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), mar24Apr24AnnualSaving = 100)
+      val a2 = a1.copy(mar24Apr24AnnualSaving = 201)
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), mar24Apr24AnnualSaving = 1000)
+      val b2 = b1.copy(mar24Apr24AnnualSaving = 2000)
+
+      repository.totalSavingsAveragedBySessionMar24Apr24().futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, b1, b2))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionMar24Apr24().futureValue mustEqual 1650.5
+    }
+
+    "must ignore calculations from before `from`" in {
+
+      val from = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), mar24Apr24AnnualSaving = 100, timestamp = from + Period.ofDays(1))
+      val a2 = a1.copy(mar24Apr24AnnualSaving = 201)
+      val a3 = a1.copy(timestamp = from - Period.ofDays(1))
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), mar24Apr24AnnualSaving = 1000, timestamp = from + Period.ofDays(1))
+      val b2 = b1.copy(mar24Apr24AnnualSaving = 2000)
+      val b3 = b1.copy(timestamp = from - Period.ofDays(1))
+
+      repository.totalSavingsAveragedBySessionMar24Apr24(from = Some(from)).futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, a3, b1, b2, b3))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionMar24Apr24(from = Some(from)).futureValue mustEqual 1650.5
+    }
+
+    "must ignore calculations from after `to`" in {
+
+      val to = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), mar24Apr24AnnualSaving = 100, timestamp = to - Period.ofDays(1))
+      val a2 = a1.copy(mar24Apr24AnnualSaving = 201)
+      val a3 = a1.copy(timestamp = to + Period.ofDays(1))
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), mar24Apr24AnnualSaving = 1000, timestamp = to - Period.ofDays(1))
+      val b2 = b1.copy(mar24Apr24AnnualSaving = 2000)
+      val b3 = b1.copy(timestamp = to + Period.ofDays(1))
+
+      repository.totalSavingsAveragedBySessionMar24Apr24(to = Some(to)).futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, a3, b1, b2, b3))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionMar24Apr24(to = Some(to)).futureValue mustEqual 1650.5
+    }
+
+    "must only include calculations between `from` and `to`" in {
+
+      val from = LocalDate.of(2024, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC)
+      val to = from + Period.ofMonths(6)
+
+      val a1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("a"), mar24Apr24AnnualSaving = 100, timestamp = from + Period.ofDays(1))
+      val a2 = a1.copy(mar24Apr24AnnualSaving = 201)
+      val a3 = a1.copy(timestamp = from - Period.ofDays(1))
+
+      val b1 = arbitrary[Calculation].sample.value.copy(sessionId = Scrambled("b"), mar24Apr24AnnualSaving = 1000, timestamp = to - Period.ofDays(1))
+      val b2 = b1.copy(mar24Apr24AnnualSaving = 2000)
+      val b3 = b1.copy(timestamp = to + Period.ofDays(1))
+
+      repository.totalSavingsAveragedBySessionMar24Apr24(from = Some(from), to = Some(to)).futureValue mustEqual 0
+      Future.traverse(Seq(a1, a2, a3, b1, b2, b3))(repository.save).futureValue
+      repository.totalSavingsAveragedBySessionMar24Apr24(from = Some(from), to = Some(to)).futureValue mustEqual 1650.5
+    }
   }
 
   implicit class RichInstant(instant: Instant) {
