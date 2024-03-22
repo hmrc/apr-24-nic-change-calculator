@@ -38,12 +38,14 @@ class CalculationService @Inject()(
 
     val calculation =
       Calculation(
-        sessionId         = keyedAndHashedSessionId,
-        annualSalary      = calculationRequest.annualSalary,
-        dec23EstimatedNic = calculationRequest.dec23EstimatedNic,
-        mar24EstimatedNic = calculationRequest.mar24EstimatedNic,
-        apr24EstimatedNic = calculationRequest.apr24EstimatedNic,
-        timestamp         = Instant.now(clock)
+        sessionId              = keyedAndHashedSessionId,
+        annualSalary           = calculationRequest.annualSalary,
+        dec23EstimatedNic      = calculationRequest.dec23EstimatedNic,
+        mar24EstimatedNic      = calculationRequest.mar24EstimatedNic,
+        apr24EstimatedNic      = calculationRequest.apr24EstimatedNic,
+        dec23Apr24AnnualSaving = calculationRequest.dec23Apr24AnnualSaving,
+        mar24Apr24AnnualSaving = calculationRequest.mar24Apr24AnnualSaving,
+        timestamp              = Instant.now(clock)
       )
 
     repository.save(calculation)

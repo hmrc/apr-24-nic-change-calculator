@@ -57,7 +57,7 @@ class CalculationControllerSpec
 
       running(application) {
 
-        val calculationRequest = CalculationRequest(1, 2.2, 3.3, 4)
+        val calculationRequest = CalculationRequest(1, 2.2, 3.3, 4, 5, 6)
 
         val request =
           FakeRequest(POST, routes.CalculationController.save().url)
@@ -84,7 +84,7 @@ class CalculationControllerSpec
 
       running(application) {
 
-        val calculationRequest = CalculationRequest(1, 2.2, 3.3, 4)
+        val calculationRequest = CalculationRequest(1, 2.2, 3.3, 4, 5, 6)
 
         val request =
           FakeRequest(POST, routes.CalculationController.save().url)

@@ -71,7 +71,9 @@ class CalculationServiceSpec
       val dec23Nic = BigDecimal(2.2)
       val mar24Nic = BigDecimal(3.3)
       val apr24Nic = BigDecimal(4.4)
-      val calculationRequest = CalculationRequest(salary, dec23Nic, mar24Nic, apr24Nic)
+      val dec23Saving = BigDecimal(5.5)
+      val mar24Saving = BigDecimal(6.6)
+      val calculationRequest = CalculationRequest(salary, dec23Nic, mar24Nic, apr24Nic, dec23Saving, mar24Saving)
 
       val captor = ArgumentCaptor.forClass(classOf[Calculation])
 
@@ -83,6 +85,8 @@ class CalculationServiceSpec
       calculation.dec23EstimatedNic mustEqual dec23Nic
       calculation.mar24EstimatedNic mustEqual mar24Nic
       calculation.apr24EstimatedNic mustEqual apr24Nic
+      calculation.dec23Apr24AnnualSaving mustEqual dec23Saving
+      calculation.mar24Apr24AnnualSaving mustEqual mar24Saving
       calculation.timestamp mustEqual fixedInstant
     }
   }

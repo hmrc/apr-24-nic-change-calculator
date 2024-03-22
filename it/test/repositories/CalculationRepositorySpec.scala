@@ -60,10 +60,12 @@ class CalculationRepositorySpec
       dec23EstimatedNic <- Gen.chooseNum(1, 10000)
       mar24EstimatedNic <- Gen.chooseNum(1, 10000)
       apr24EstimatedNic <- Gen.chooseNum(1, 1000)
+      dec23Saving <- Gen.choose(1, 1000)
+      mar24Saving <- Gen.choose(1, 1000)
       fromGen = from.getOrElse(LocalDate.of(2024, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC))
       toGen = to.getOrElse(fromGen + Period.ofMonths(6))
       timestamp <- datesBetween(fromGen, toGen)
-    } yield Calculation(sessionId, annualSalary, dec23EstimatedNic, mar24EstimatedNic, apr24EstimatedNic, timestamp)
+    } yield Calculation(sessionId, annualSalary, dec23EstimatedNic, mar24EstimatedNic, apr24EstimatedNic, dec23Saving, mar24Saving, timestamp)
 
   private implicit val arbitraryCalculation: Arbitrary[Calculation] =
     Arbitrary(randomCalculation(None, None))
@@ -80,6 +82,8 @@ class CalculationRepositorySpec
         dec23EstimatedNic = 2.2,
         mar24EstimatedNic = 3.3,
         apr24EstimatedNic = 4,
+        dec23Apr24AnnualSaving = 5,
+        mar24Apr24AnnualSaving = 6,
         timestamp = timestamp
       )
 
@@ -111,6 +115,8 @@ class CalculationRepositorySpec
         dec23EstimatedNic = 2.2,
         mar24EstimatedNic = 3.3,
         apr24EstimatedNic = 4,
+        dec23Apr24AnnualSaving = 5,
+        mar24Apr24AnnualSaving = 6,
         timestamp = timestamp
       )
 
