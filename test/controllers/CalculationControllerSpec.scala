@@ -117,7 +117,11 @@ class CalculationControllerSpec
       numberOfUniqueSessions = 500,
       numberOfCalculationsWithNoSavings = 400,
       numberOfCalculationsWithMinimalSavings = 300,
-      averageSalary = 15000
+      averageSalary = 15000,
+      totalSavingsDec23Apr24 = 1,
+      totalSavingsMar24Apr24 = 2,
+      totalSavingsAveragedBySessionDec23Apr24 = 3,
+      totalSavingsAveragedBySessionMar24Apr24 = 4
     )
 
     "must return OK with CalculationSummaryData" in running(application) {
