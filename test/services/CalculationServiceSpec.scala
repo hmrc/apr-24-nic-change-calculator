@@ -71,7 +71,9 @@ class CalculationServiceSpec
       val dec23Nic = BigDecimal(2.2)
       val mar24Nic = BigDecimal(3.3)
       val apr24Nic = BigDecimal(4.4)
-      val calculationRequest = CalculationRequest(salary, dec23Nic, mar24Nic, apr24Nic)
+      val dec23Saving = BigDecimal(5.5)
+      val mar24Saving = BigDecimal(6.6)
+      val calculationRequest = CalculationRequest(salary, dec23Nic, mar24Nic, apr24Nic, dec23Saving, mar24Saving)
 
       val captor = ArgumentCaptor.forClass(classOf[Calculation])
 
@@ -83,6 +85,8 @@ class CalculationServiceSpec
       calculation.dec23EstimatedNic mustEqual dec23Nic
       calculation.mar24EstimatedNic mustEqual mar24Nic
       calculation.apr24EstimatedNic mustEqual apr24Nic
+      calculation.dec23Apr24AnnualSaving mustEqual dec23Saving
+      calculation.mar24Apr24AnnualSaving mustEqual mar24Saving
       calculation.timestamp mustEqual fixedInstant
     }
   }
@@ -108,7 +112,11 @@ class CalculationServiceSpec
       numberOfUniqueSessions = 500,
       numberOfCalculationsWithNoSavings = 300,
       numberOfCalculationsWithMinimalSavings = 100,
-      averageSalary = 15000
+      averageSalary = 15000,
+      totalSavingsDec23Apr24 = 1,
+      totalSavingsMar24Apr24 = 2,
+      totalSavingsAveragedBySessionDec23Apr24 = 3,
+      totalSavingsAveragedBySessionMar24Apr24 = 4
     )
 
     "must return a summary" in running(application) {
@@ -117,6 +125,10 @@ class CalculationServiceSpec
       when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
       when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
       when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
+      when(mockRepository.totalSavingsDec23Apr24(any(), any())).thenReturn(Future.successful(1))
+      when(mockRepository.totalSavingsMar24Apr24(any(), any())).thenReturn(Future.successful(2))
+      when(mockRepository.totalSavingsAveragedBySessionDec23Apr24(any(), any())).thenReturn(Future.successful(3))
+      when(mockRepository.totalSavingsAveragedBySessionMar24Apr24(any(), any())).thenReturn(Future.successful(4))
       when(mockRepository.averageSalary(any(), any())).thenReturn(Future.successful(15000))
 
       service.summary(Some(from), Some(to)).futureValue mustEqual summaryData
@@ -125,6 +137,10 @@ class CalculationServiceSpec
       verify(mockRepository).numberOfUniqueSessions(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository).numberOfCalculationsWithNoSavings(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).totalSavingsDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).totalSavingsMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -137,6 +153,10 @@ class CalculationServiceSpec
       verify(mockRepository, never()).numberOfUniqueSessions(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).numberOfCalculationsWithNoSavings(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -149,6 +169,10 @@ class CalculationServiceSpec
 
       verify(mockRepository, never()).numberOfCalculationsWithNoSavings(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -161,6 +185,10 @@ class CalculationServiceSpec
       service.summary(Some(from), Some(to)).failed.futureValue
 
       verify(mockRepository, never()).numberOfCalculationsWithMinimalSavings(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
       verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
     }
 
@@ -170,6 +198,74 @@ class CalculationServiceSpec
       when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
       when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
       when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).totalSavingsDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the total savings Dec 23 - Apr 24" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
+      when(mockRepository.totalSavingsDec23Apr24(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).totalSavingsMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the total savings Mar 24 - Apr 24" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
+      when(mockRepository.totalSavingsDec23Apr24(any(), any())).thenReturn(Future.successful(1))
+      when(mockRepository.totalSavingsMar24Apr24(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).totalSavingsAveragedBySessionDec23Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the total averaged savings Dec 23 - Apr 24" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
+      when(mockRepository.totalSavingsDec23Apr24(any(), any())).thenReturn(Future.successful(1))
+      when(mockRepository.totalSavingsMar24Apr24(any(), any())).thenReturn(Future.successful(2))
+      when(mockRepository.totalSavingsAveragedBySessionDec23Apr24(any(), any())).thenReturn(Future.failed(new RuntimeException()))
+
+      service.summary(Some(from), Some(to)).failed.futureValue
+
+      verify(mockRepository, never()).totalSavingsAveragedBySessionMar24Apr24(eqTo(Some(from)), eqTo(Some(to)))
+      verify(mockRepository, never()).averageSalary(eqTo(Some(from)), eqTo(Some(to)))
+    }
+
+    "must fail when the repository fails to return the total averaged savings Mar 24 - Apr 24" in running(application) {
+
+      when(mockRepository.numberOfCalculations(any(), any())).thenReturn(Future.successful(1000))
+      when(mockRepository.numberOfUniqueSessions(any(), any())).thenReturn(Future.successful(500))
+      when(mockRepository.numberOfCalculationsWithNoSavings(any(), any())).thenReturn(Future.successful(300))
+      when(mockRepository.numberOfCalculationsWithMinimalSavings(any(), any())).thenReturn(Future.successful(100))
+      when(mockRepository.totalSavingsDec23Apr24(any(), any())).thenReturn(Future.successful(1))
+      when(mockRepository.totalSavingsMar24Apr24(any(), any())).thenReturn(Future.successful(2))
+      when(mockRepository.totalSavingsAveragedBySessionDec23Apr24(any(), any())).thenReturn(Future.successful(3))
+      when(mockRepository.totalSavingsAveragedBySessionMar24Apr24(any(), any())).thenReturn(Future.failed(new RuntimeException()))
 
       service.summary(Some(from), Some(to)).failed.futureValue
 

@@ -27,6 +27,10 @@ final case class CalculationSummaryData(
                                          numberOfUniqueSessions: Long,
                                          numberOfCalculationsWithNoSavings: Long,
                                          numberOfCalculationsWithMinimalSavings: Long,
+                                         totalSavingsDec23Apr24: BigDecimal,
+                                         totalSavingsMar24Apr24: BigDecimal,
+                                         totalSavingsAveragedBySessionDec23Apr24: BigDecimal,
+                                         totalSavingsAveragedBySessionMar24Apr24: BigDecimal,
                                          averageSalary: BigDecimal
                                        )
 

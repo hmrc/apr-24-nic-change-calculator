@@ -38,12 +38,14 @@ class CalculationService @Inject()(
 
     val calculation =
       Calculation(
-        sessionId         = keyedAndHashedSessionId,
-        annualSalary      = calculationRequest.annualSalary,
-        dec23EstimatedNic = calculationRequest.dec23EstimatedNic,
-        mar24EstimatedNic = calculationRequest.mar24EstimatedNic,
-        apr24EstimatedNic = calculationRequest.apr24EstimatedNic,
-        timestamp         = Instant.now(clock)
+        sessionId              = keyedAndHashedSessionId,
+        annualSalary           = calculationRequest.annualSalary,
+        dec23EstimatedNic      = calculationRequest.dec23EstimatedNic,
+        mar24EstimatedNic      = calculationRequest.mar24EstimatedNic,
+        apr24EstimatedNic      = calculationRequest.apr24EstimatedNic,
+        dec23Apr24AnnualSaving = calculationRequest.dec23Apr24AnnualSaving,
+        mar24Apr24AnnualSaving = calculationRequest.mar24Apr24AnnualSaving,
+        timestamp              = Instant.now(clock)
       )
 
     repository.save(calculation)
@@ -55,6 +57,10 @@ class CalculationService @Inject()(
       numberOfUniqueSessions <- repository.numberOfUniqueSessions(from, to)
       numberOfCalculationsWithNoSavings <- repository.numberOfCalculationsWithNoSavings(from, to)
       numberOfCalculationsWithMinimalSavings <- repository.numberOfCalculationsWithMinimalSavings(from, to)
+      totalSavingsDec23Apr24 <- repository.totalSavingsDec23Apr24(from, to)
+      totalSavingsMar24Apr24 <- repository.totalSavingsMar24Apr24(from, to)
+      totalSavingsDec23Apr24AveragedBySession <- repository.totalSavingsAveragedBySessionDec23Apr24(from, to)
+      totalSavingsMar24Apr24AveragedBySession <- repository.totalSavingsAveragedBySessionMar24Apr24(from, to)
       averageSalary <- repository.averageSalary(from, to)
     } yield CalculationSummaryData(
       from = from,
@@ -63,6 +69,10 @@ class CalculationService @Inject()(
       numberOfUniqueSessions = numberOfUniqueSessions,
       numberOfCalculationsWithNoSavings = numberOfCalculationsWithNoSavings,
       numberOfCalculationsWithMinimalSavings = numberOfCalculationsWithMinimalSavings,
+      totalSavingsDec23Apr24 = totalSavingsDec23Apr24,
+      totalSavingsMar24Apr24 = totalSavingsMar24Apr24,
+      totalSavingsAveragedBySessionDec23Apr24 = totalSavingsDec23Apr24AveragedBySession,
+      totalSavingsAveragedBySessionMar24Apr24 = totalSavingsMar24Apr24AveragedBySession,
       averageSalary = averageSalary
     )
 }

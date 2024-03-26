@@ -22,7 +22,9 @@ final case class CalculationRequest(
                                      annualSalary: BigDecimal,
                                      dec23EstimatedNic: BigDecimal,
                                      mar24EstimatedNic: BigDecimal,
-                                     apr24EstimatedNic: BigDecimal
+                                     apr24EstimatedNic: BigDecimal,
+                                     dec23Apr24AnnualSaving: BigDecimal,
+                                     mar24Apr24AnnualSaving: BigDecimal
                                    )
 
 object CalculationRequest {
